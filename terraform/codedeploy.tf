@@ -28,7 +28,6 @@ resource "aws_codedeploy_app" "csye6225-webapp" {
   compute_platform = "Server"
 }
 
-
 resource "aws_codedeploy_deployment_group" "csye6225-webapp-deployment" {
   app_name              = aws_codedeploy_app.csye6225-webapp.name
   deployment_group_name = "csye6225-webapp-deployment"
