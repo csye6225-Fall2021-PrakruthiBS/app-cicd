@@ -23,7 +23,6 @@ resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
   role       = aws_iam_role.CodeDeployServiceRole.name
 }
 
-
 resource "aws_codedeploy_app" "csye6225-webapp" {
   name = "csye6225-webapp"
   compute_platform = "Server"
