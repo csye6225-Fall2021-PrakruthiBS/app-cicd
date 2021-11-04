@@ -37,7 +37,7 @@ resource "aws_codedeploy_deployment_group" "csye6225-webapp-deployment" {
     ec2_tag_filter {
       key   = "Name"
       type  = "KEY_AND_VALUE"
-      value = "EC2 code deploy"
+      value = "CSYE6225_EC2_INSTANCE"
     }
   }
 
