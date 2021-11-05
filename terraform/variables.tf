@@ -46,3 +46,18 @@ variable "secretAccessKey" {
   type        = string
   description = "Profile name"
 }
+
+variable "CodeDeploy-EC2-S3" {
+  type        = string
+  description = "CodeDeploy-EC2-S3"
+}
+
+variable "GH-Code-Deploy" {
+  type        = string
+  description = "GH-Code-Deploy"
+}
+
+variable "GH-Upload-To-S3" {
+  type        = string
+  description = "GH-Upload-To-S3"
+}
