@@ -1,5 +1,5 @@
 resource "aws_iam_policy" "CodeDeploy-EC2-S3" {
-  name   = "CodeDeploy-EC2-S3"
+  name   = var.CodeDeploy-EC2-S3
   path   = "/"
   policy = <<EOF
 {
@@ -17,7 +17,6 @@ resource "aws_iam_policy" "CodeDeploy-EC2-S3" {
             ],
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::${var.codedeploy_bucket_name}/*",
                 "arn:aws:s3:::${var.codedeploy_bucket_name}"
               ]
         }
@@ -28,7 +27,7 @@ EOF
 
 
 resource "aws_iam_policy" "GH-Code-Deploy" {
-  name   = "GH-Code-Deploy"
+  name   = var.GH-Code-Deploy
   path   = "/"
   policy = <<EOF
 {
@@ -71,7 +70,7 @@ EOF
 }
 
 resource "aws_iam_policy" "GH-Upload-To-S3" {
-  name   = "GH-Upload-To-S3"
+  name   = var.GH-Upload-To-S3
   path   = "/"
   policy = <<EOF
 {
@@ -85,7 +84,6 @@ resource "aws_iam_policy" "GH-Upload-To-S3" {
               "s3:List*"
           ],
           "Resource": [
-              "arn:aws:s3:::${var.codedeploy_bucket_name}/*",
               "arn:aws:s3:::${var.codedeploy_bucket_name}"
           ]
       }
