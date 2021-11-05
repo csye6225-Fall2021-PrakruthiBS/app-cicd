@@ -94,7 +94,6 @@ resource "aws_iam_policy" "GH-Upload-To-S3" {
 EOF
 }
 
-
 resource "aws_iam_role_policy_attachment" "role-policy-attachment" {
   role       = "EC2-CSYE6225"
   policy_arn = aws_iam_policy.CodeDeploy-EC2-S3.arn
