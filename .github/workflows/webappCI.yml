@@ -41,7 +41,7 @@ jobs:
       - name: create zip of artifacts
         run: |
           mkdir deploy_artifact
-          zip -r webapp-${{github.run_number}}.zip / -i /target/webapp-0.0.1-SNAPSHOT.jar /scripts/*.sh appspec.yml
+          zip -r webapp-${{github.run_number}}.zip . -i /target/webapp-0.0.1-SNAPSHOT.jar /scripts/*.sh appspec.yml
           mv webapp-${{github.run_number}}.zip ./deploy_artifact
       - name: Copy artifacts to S3
         run: |
