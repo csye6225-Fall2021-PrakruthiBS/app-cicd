@@ -1,6 +1,5 @@
 resource "aws_iam_role" "CodeDeployServiceRole" {
   name = "CodeDeployServiceRole"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
