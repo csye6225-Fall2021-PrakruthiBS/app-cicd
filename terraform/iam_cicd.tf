@@ -25,7 +25,6 @@ resource "aws_iam_policy" "CodeDeploy-EC2-S3" {
 EOF
 }
 
-
 resource "aws_iam_policy" "GH-Code-Deploy" {
   name   = var.GH-Code-Deploy
   path   = "/"
