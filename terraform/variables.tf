@@ -55,7 +55,6 @@ variable "GH-Code-Deploy" {
   type        = string
   description = "GH-Code-Deploy"
 }
-
 variable "GH-Upload-To-S3" {
   type        = string
   description = "GH-Upload-To-S3"
