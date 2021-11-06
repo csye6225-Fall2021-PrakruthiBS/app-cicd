@@ -38,12 +38,12 @@ variable "profileName" {
 
 variable "accessKeyId" {
   type        = string
-  description = "Profile name"
+  description = "accessKeyId"
 }
 
 variable "secretAccessKey" {
   type        = string
-  description = "Profile name"
+  description = "secretAccessKey"
 }
 
 variable "CodeDeploy-EC2-S3" {
