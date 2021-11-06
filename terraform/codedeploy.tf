@@ -48,5 +48,4 @@ resource "aws_codedeploy_deployment_group" "csye6225-webapp-deployment" {
     enabled = true
     events  = ["DEPLOYMENT_FAILURE"]
   }
-
 }
