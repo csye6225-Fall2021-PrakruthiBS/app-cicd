@@ -26,7 +26,6 @@ variable "iam_ghactions_app_user" {
   description = "IAM User for github actions"
   type        = string
 }
-
 variable "regionName" {
   type        = string
   description = "region"
