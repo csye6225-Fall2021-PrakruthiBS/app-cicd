@@ -1,4 +1,4 @@
-name: build CI/CD
+name: Build CI/CD
 
 on:
   push:
@@ -20,29 +20,35 @@ jobs:
         run: mvn clean package
       - name: Maven Verify
         run: mvn clean verify -DskipTests
-  continuous-deployment:
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: github.ref == 'refs/heads/main' && needs.build.result == 'success'
-    steps:
-      - name: Install AWS CLI 2
+      - name: jar path
         run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install --update
-          sudo sleep 10
-
+          pwd
+          mkdir deploy_artifact
+          cd ./target
+          pwd
+          ls -l
+          ls -a 
+          cd ..       
+      - name: create zip of artifacts
+        run: |
+          pwd
+          ls -l
+          ls -a 
+          chmod 777 ./scripts
+          chmod 777 ./scripts/*.sh
+          chmod 777 ./target/webapp-0.0.1-SNAPSHOT.jar
+          chmod 777 appspec.yml        
+          zip -r webapp-${{github.run_number}}.zip ./target/webapp-0.0.1-SNAPSHOT.jar ./scripts/*.sh appspec.yml
+          mv webapp-${{github.run_number}}.zip ./deploy_artifact/
+          cd ./deploy_artifact
+          ls -l
+          ls -a
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.SECRET_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: create zip of artifacts
-        run: |
-          mkdir deploy_artifact
-          zip -r webapp-${{github.run_number}}.zip . -i /target/webapp-0.0.1-SNAPSHOT.jar /scripts/*.sh appspec.yml
-          mv webapp-${{github.run_number}}.zip ./deploy_artifact
+          aws-region: ${{ secrets.AWS_REGION }} 
       - name: Copy artifacts to S3
         run: |
           aws s3 sync ./deploy_artifact s3://${{secrets.AWS_CODEDEPLOY_BUCKET}}

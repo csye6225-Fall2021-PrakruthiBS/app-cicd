@@ -3,18 +3,18 @@ os: linux
 
 files:
   - source: /
-    destination: /home/ubuntu/
+    destination: /home/ubuntu/   
 
 hooks:
   ApplicationStop:
     - location: scripts/appstop.sh
       timeout: 180
-      runas: root
+      runas: ubuntu
   ApplicationStart:
     - location: scripts/appstart.sh
       timeout: 180
-      runas: root
-  ValidateService:
-    - location: scripts/apphealth.sh
-      timeout: 180
-      runas: root
+      runas: ubuntu
+#  ValidateService:
+#    - location: scripts/apphealth.sh
+#      timeout: 180
+#      runas: ubuntu
