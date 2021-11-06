@@ -9,8 +9,6 @@ resource "aws_iam_policy" "CodeDeploy-EC2-S3" {
             "Action": [
                 "s3:PutObject",
                 "s3:GetObject",
-                "s3:Get*",
-                "s3:List*",
                 "s3:AbortMultipartUpload",
                 "s3:ListBucket",
                 "s3:DeleteObject",
@@ -19,6 +17,7 @@ resource "aws_iam_policy" "CodeDeploy-EC2-S3" {
             ],
             "Effect": "Allow",
             "Resource": [
+              "arn:aws:s3:::${var.codedeploy_bucket_name}/*",
                 "arn:aws:s3:::${var.codedeploy_bucket_name}"
               ]
         }
