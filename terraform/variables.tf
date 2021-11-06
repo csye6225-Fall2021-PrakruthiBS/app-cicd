@@ -50,7 +50,6 @@ variable "CodeDeploy-EC2-S3" {
   type        = string
   description = "CodeDeploy-EC2-S3"
 }
-
 variable "GH-Code-Deploy" {
   type        = string
   description = "GH-Code-Deploy"
