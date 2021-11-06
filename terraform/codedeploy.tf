@@ -1,5 +1,5 @@
 resource "aws_iam_role" "CodeDeployServiceRole" {
-  name = "CodeDeployServiceRole"
+  name               = "CodeDeployServiceRole"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -23,7 +23,7 @@ resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
 }
 
 resource "aws_codedeploy_app" "csye6225-webapp" {
-  name = "csye6225-webapp"
+  name             = "csye6225-webapp"
   compute_platform = "Server"
 }
 
