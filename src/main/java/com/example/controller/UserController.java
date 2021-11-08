@@ -45,7 +45,7 @@ import com.example.entity.UserEntity;
 
 @RestController
 //@EnableWebMvc
-@RequestMapping("/v1/user/")
+@RequestMapping("/v2/user/")
 public class UserController {
 
 	@Autowired
