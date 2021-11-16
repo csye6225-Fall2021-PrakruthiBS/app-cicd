@@ -37,6 +37,4 @@ public class MetricsConfig {
         }
         return new NoOpStatsDClient();
     }
-
-
 }
