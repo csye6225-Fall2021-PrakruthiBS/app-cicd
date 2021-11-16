@@ -31,6 +31,7 @@ resource "aws_codedeploy_deployment_group" "csye6225-webapp-deployment" {
   app_name              = aws_codedeploy_app.csye6225-webapp.name
   deployment_group_name = "csye6225-webapp-deployment"
   service_role_arn      = aws_iam_role.CodeDeployServiceRole.arn
+  autoscaling_groups = ["auto_scaling_group"]
 
   ec2_tag_set {
     ec2_tag_filter {
