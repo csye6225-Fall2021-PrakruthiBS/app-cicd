@@ -10,6 +10,10 @@ hooks:
     - location: scripts/appstop.sh
       timeout: 180
       runas: ubuntu
+  AfterInstall:
+    - location: scripts/afterinstall.sh
+      timeout: 180
+      runas: ubuntu
   ApplicationStart:
     - location: scripts/appstart.sh
       timeout: 180
