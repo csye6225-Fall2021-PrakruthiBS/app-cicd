@@ -16,6 +16,8 @@ import javax.annotation.PostConstruct;
 import javax.naming.AuthenticationException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +50,7 @@ import com.example.UpdateUserRequest.UpdateUserRequest;
 import com.example.entity.Image;
 import com.example.entity.UserEntity;
 import com.example.repository.UserRepository;
+import com.timgroup.statsd.StatsDClient;
 import com.example.repository.ImageRepository;
 
 @Service
@@ -62,6 +65,11 @@ public class UserService implements UserDetailsService{
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");  
 	 LocalDateTime now = LocalDateTime.now();
+	 
+	 private final static Logger logger = LoggerFactory.getLogger(UserService.class);
+	 
+	 @Autowired
+	 private StatsDClient statsDClient;
 	
 	 private AmazonS3 s3client;
 //	 @Value("${s3.endpointUrl}")
@@ -92,8 +100,15 @@ public class UserService implements UserDetailsService{
 	public @ResponseBody UserEntity getUserInfo(String usernName, String password) {
 		UserEntity user = userRepository.findByUserName(usernName);
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
-		return userRepository.findByUserName(usernName);
+		long startTime =  System.currentTimeMillis();
+		UserEntity usr = userRepository.findByUserName(usernName);
+		long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime);
+        statsDClient.recordExecutionTime("dbQueryTimeGetUser",duration);
+        logger.info("Get user data from the DB");
+		return usr;
 		}else {
+			logger.error("User with given username does not exists/ username/password is wrong");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists/ username/password is wrong");
 		}
 		
@@ -103,15 +118,18 @@ public class UserService implements UserDetailsService{
 		UserEntity usr = new UserEntity(createUserRequest);
 		UserEntity userExists = userRepository.findByUserName(usr.getUserName());
 		System.out.println("username: " + usr.getUserName() + " usrpassword: " + usr.getPassword());
-		//System.out.println("username: " + userExists.getUserName() + " usrpassword: " + userExists.getPassword());
 			if(userExists!=null)
 			{
+				logger.error("User with given username already exists");
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username already exists");}
 			else {
-		
-		//System.out.println("Service Username: " + userExists.getUserName()+ "Password: " + userExists.getPassword());
 			usr.setPassword(bCryptPasswordEncoder.encode(usr.getPassword()));
+			long startTime = System.currentTimeMillis();
 			usr = userRepository.save(usr);
+			long endTime = System.currentTimeMillis();
+            long duration = (endTime - startTime);
+            statsDClient.recordExecutionTime("dbQueryTimeCreateUser", duration);
+            logger.info("New user created in DB successfully");
 			return usr;
 			}
 		
@@ -126,7 +144,7 @@ public class UserService implements UserDetailsService{
 
 			UserEntity user = userRepository.findByUserName(username);
 		if(userRepository.findByUserName(username) == null) {
-		
+			logger.error("User with given username does not exists");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists");
 		}
 		else 
@@ -135,12 +153,18 @@ public class UserService implements UserDetailsService{
 			user.setLastName(updateUserRequest.getLast_name());
 			user.setPassword(updateUserRequest.getPassword());
 			user.setAccount_updated(now);
-		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-		userRepository.save(user);
-		return user;
+			user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+			long startTime =  System.currentTimeMillis();
+			userRepository.save(user);
+			long endTime = System.currentTimeMillis();
+	        long duration = (endTime - startTime);
+	        statsDClient.recordExecutionTime("dbQueryTimeUpdateUser",duration);
+	        logger.info("User data updated in DB successfully");
+			return user;
 			
 		}
 		else {
+			logger.error("Incorrect username/password");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect username/password");
 		}
 	}
@@ -158,8 +182,7 @@ public class UserService implements UserDetailsService{
 	
 	//////////////////IMAGE PART//////////////////////////////////////
 	
-	private File convertMultiPartToFile(MultipartFile file) 
-			throws IOException {
+	private File convertMultiPartToFile(MultipartFile file)throws IOException {
 			  File convFile = new File(file.getOriginalFilename());
 			  FileOutputStream fos = new FileOutputStream(convFile);
 			  fos.write(file.getBytes());
@@ -175,8 +198,15 @@ public class UserService implements UserDetailsService{
 	public @ResponseBody Image getUserImage(String usernName, String password) {
 		UserEntity user = userRepository.findByUserName(usernName);
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
-            return imageRepository.getByUserId(user.getId());
+			long startTime =  System.currentTimeMillis();
+			Image image = imageRepository.getByUserId(user.getId());
+			long endTime = System.currentTimeMillis();
+	        long duration = (endTime - startTime);
+	        statsDClient.recordExecutionTime("dbQueryTimeGetImageData",duration);
+	        logger.info("Getting user image metadat from DB");
+	        return image;
 		}else {
+			logger.error("User with given username does not exists/ username/password is wrong");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists/ username/password is wrong");
 		}
 		
@@ -190,7 +220,6 @@ public class UserService implements UserDetailsService{
 			UserEntity user = userRepository.findByUserName(usernName);
 			if (usernName.equalsIgnoreCase(user.getUserName())&& bCryptPasswordEncoder.matches(password, user.getPassword())) {
 				Image image = new Image();
-				//Image image_exist = imageRepository.findById(user.getId());
 				String fileUrl = "";
 				String fileName = generateFileName();
 				String today = LocalDate.now().toString();
@@ -201,42 +230,44 @@ public class UserService implements UserDetailsService{
 				fos.close();
 				UserEntity user1 = userRepository.findByUserName(usernName);
 				System.out.println("user1: " + user1.getId());
-				
-				
-				//System.out.println("image_exist: " + image_exist.getId());
 
 				if (imageRepository.getByUserId(user1.getId()) != null) {
-					System.out.println(user.getId());
-					Image image_exist = imageRepository.getByUserId(user1.getId());
-					System.out.println("PUT");
-					System.out.println("filename: " + image_exist.getFileName());
-					s3client.deleteObject(bucketName, image_exist.getFileName());
-					uploadFileTos3bucket(fileName, image_file);
+					Image imageExists = imageRepository.getByUserId(user1.getId());
+					s3client.deleteObject(bucketName, imageExists.getFileName());
+					//uploadFileTos3bucket(fileName, image_file);
+					long startTime =  System.currentTimeMillis();
+					s3client.putObject(bucketName, fileName, image_file);
+			        long endTime = System.currentTimeMillis();
+			        long duration = (endTime - startTime);
+			        statsDClient.recordExecutionTime("PutProfileimageToS3",duration);
+			        logger.info("User image updated in S3 bucket successfully");
 					image_file.delete();
-					image.setId(image_exist.getId());
+					image.setId(imageExists.getId());
 					image.setUserEntity(user);
 					image.setUrl(fileUrl);
 					image.setFileName(fileName);
 					image.setUploaded_date(today);
 					imageRepository.save(image);
-					
-					
 				} 
 				else {
-					System.out.println(user.getId());
-					System.out.println("POST");
 					image.setUrl(fileUrl);
 					image.setFileName(fileName);
 					image.setUploaded_date(today);
 					image.setUserEntity(user);
 					imageRepository.save(image);
-					uploadFileTos3bucket(fileName, image_file);
+					//uploadFileTos3bucket(fileName, image_file);
+					long startTime =  System.currentTimeMillis();
+					s3client.putObject(bucketName, fileName, image_file);
+					long endTime = System.currentTimeMillis();
+			        long duration = (endTime - startTime);
+			        statsDClient.recordExecutionTime("PostProfileimageToS3",duration);
+			        logger.info("User image uploaded to S3 bucket successfully");
 					image_file.delete();
 				}
 				return image;
 			} else {
-				throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-						"User with given username does not exists/ username/password is wrong");
+				logger.error("User with given username does not exists/ username/password is wrong");
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists/ username/password is wrong");
 			}
 		}
 
@@ -248,14 +279,19 @@ public class UserService implements UserDetailsService{
 	public String deleteFileFromS3Bucket(String usernName, String password) {
 		UserEntity user = userRepository.findByUserName(usernName);
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
-			Image image_exist = imageRepository.getByUserId(user.getId());
-			System.out.println(image_exist);
-		  String fileName = image_exist.getFileName();
+		  Image imageExists = imageRepository.getByUserId(user.getId());
+		  String fileName = imageExists.getFileName();
 		  System.out.println("filename: " + fileName);
+		  long startTime =  System.currentTimeMillis();
 		  s3client.deleteObject(bucketName, fileName);
 		  imageRepository.deleteByUserId(user.getId());
+		  long endTime = System.currentTimeMillis();
+	      long duration = (endTime - startTime);
+	      statsDClient.recordExecutionTime("DeleteProfileimageFromS3",duration);
+	      logger.info("User image deleted from S3 bucket successfully");
 		  return "successfully deleted";
 		}else {
+			logger.error("User with given username does not exists/ username/password is wrong");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists/ username/password is wrong");
 		}
 		}

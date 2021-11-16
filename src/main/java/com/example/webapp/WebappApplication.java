@@ -13,7 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 //@ComponentScan("com.example.*") 
-@ComponentScan({"com.example.controller", "com.example.service"})
+@ComponentScan({"com.example.controller", "com.example.service", "com.example.Configuration"})
 @EntityScan("com.example.entity")
 @EnableJpaRepositories("com.example.repository")
 

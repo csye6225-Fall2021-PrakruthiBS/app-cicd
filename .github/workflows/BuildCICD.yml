@@ -37,8 +37,9 @@ jobs:
           chmod 777 ./scripts
           chmod 777 ./scripts/*.sh
           chmod 777 ./target/webapp-0.0.1-SNAPSHOT.jar
-          chmod 777 appspec.yml        
-          zip -r webapp-${{github.run_number}}.zip ./target/webapp-0.0.1-SNAPSHOT.jar ./scripts/*.sh appspec.yml
+          chmod 777 appspec.yml
+          chmod 777 CloudWatchAgentConfig.json        
+          zip -r webapp-${{github.run_number}}.zip ./target/webapp-0.0.1-SNAPSHOT.jar ./scripts/*.sh appspec.yml CloudWatchAgentConfig.json
           mv webapp-${{github.run_number}}.zip ./deploy_artifact/
           cd ./deploy_artifact
           ls -l
