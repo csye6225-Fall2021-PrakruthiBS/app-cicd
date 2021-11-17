@@ -76,27 +76,27 @@ public class UserService implements UserDetailsService{
 //	 private String endpointUrl;
 	 @Value("${s3.bucketName}")
 	 private String bucketName;
-//	 @Value("${s3.accessKeyId}")
-//	 private String accessKeyId;
-//	 @Value("${s3.secretKey}")
-//	 private String secretKey;
+	 @Value("${s3.accessKeyId}")
+	 private String accessKeyId;
+	 @Value("${s3.secretKey}")
+	 private String secretKey;
 	 @Value("${s3.region}")
 	 private String region;
 	
-	 @PostConstruct
-	 private void initializeAmazon() {
-		  //AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
-		  this.s3client = AmazonS3ClientBuilder.standard().build();
-		}
-	 
-
 //	 @PostConstruct
 //	 private void initializeAmazon() {
-//		  AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
-//		  System.out.println("credentials: " + credentials);
-//		  System.out.println("region: " + region);
-//		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+//		  //AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
+//		  this.s3client = AmazonS3ClientBuilder.standard().build();
 //		}
+//	 
+
+	 @PostConstruct
+	 private void initializeAmazon() {
+		  AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
+		  System.out.println("credentials: " + credentials);
+		  System.out.println("region: " + region);
+		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+		}
 	
 	 @Autowired
 	 public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
