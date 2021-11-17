@@ -82,13 +82,6 @@ public class UserService implements UserDetailsService{
 	 private String secretKey;
 	 @Value("${s3.region}")
 	 private String region;
-	
-//	 @PostConstruct
-//	 private void initializeAmazon() {
-//		  //AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
-//		  this.s3client = AmazonS3ClientBuilder.standard().build();
-//		}
-//	 
 
 	 @PostConstruct
 	 private void initializeAmazon() {
