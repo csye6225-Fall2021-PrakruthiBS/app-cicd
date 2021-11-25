@@ -41,6 +41,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.example.CreateUserRequest.CreateUserRequest;
@@ -85,10 +86,10 @@ public class UserService implements UserDetailsService{
 
 	 @PostConstruct
 	 private void initializeAmazon() {
-		  AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
-		  System.out.println("credentials: " + credentials);
+		  //AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
+		  //System.out.println("credentials: " + credentials);
 		  System.out.println("region: " + region);
-		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+		  this.s3client = AmazonS3ClientBuilder.standard().withCredentials(new InstanceProfileCredentialsProvider(true)).build();
 		}
 	
 	 @Autowired
