@@ -77,10 +77,10 @@ public class UserService implements UserDetailsService{
 //	 private String endpointUrl;
 	 @Value("${s3.bucketName}")
 	 private String bucketName;
-	 @Value("${s3.accessKeyId}")
-	 private String accessKeyId;
-	 @Value("${s3.secretKey}")
-	 private String secretKey;
+//	 @Value("${s3.accessKeyId}")
+//	 private String accessKeyId;
+//	 @Value("${s3.secretKey}")
+//	 private String secretKey;
 	 @Value("${s3.region}")
 	 private String region;
 
