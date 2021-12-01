@@ -160,8 +160,8 @@ public class UserController {
 	
 	
 	 @RequestMapping(value = "user/EmailVerification", method = RequestMethod.GET)
-	    public ResponseEntity<Object> verifyUser(@RequestParam("email") String username, @RequestParam("token") String token) {
+	    public ResponseEntity<Object> verifyUser(@RequestParam("email") String username, @RequestParam("token") String token, @RequestParam("ttl") String ttl) {
 	        statsDClient.incrementCounter("v1.user.EmailVerification");
-	        return this.userService.verifyUser(username,token);
+	        return this.userService.verifyUser(username,token, ttl);
 	 }
 }

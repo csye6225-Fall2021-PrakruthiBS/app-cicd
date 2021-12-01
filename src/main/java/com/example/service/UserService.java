@@ -229,6 +229,21 @@ public class UserService implements UserDetailsService{
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not verified");
 			}
 	}
+	
+	public UserEntity updateUserVerification(String username) {
+
+		UserEntity user = userRepository.findByUserName(username);
+
+		user.setVerified(true);
+		user.setVerified_on(LocalDateTime.now().toString());
+		long startTime =  System.currentTimeMillis();
+		userRepository.save(user);
+		long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime);
+        statsDClient.recordExecutionTime("dbQueryTimeUpdateUser",duration);
+        logger.info("User verification updated in DB successfully");
+		return user;
+}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -264,36 +279,47 @@ public class UserService implements UserDetailsService{
         System.out.println("SNS Message ID: " + result.getMessageId());
     }
     
-    public ResponseEntity<Object> verifyUser (String username, String token){
-        //statsDClient.incrementCounter("v1.verifyUserEmail");
+    public ResponseEntity<Object> verifyUser (String username, String token, String ttl){
+
+        logger.info("Username from link: "+username);
+        logger.info("token from link: "+token);
         Map<String, Object> map = new HashMap<String, Object>();
         UserEntity u1 = userRepository.findByUserName(username);
         AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().build();
         GetItemRequest req = new GetItemRequest();
         req.setTableName("csye6225");
-        req.setProjectionExpression("msg");
         req.setConsistentRead(true);
-        String msg = username+"::"+token+"::"+"initial_token";
-        Map<String, AttributeValue> DynamoDBMap = new HashMap();
-        DynamoDBMap.put("msg", new AttributeValue(msg));
-        req.setKey(DynamoDBMap);
+        String msg = username+"::"+token+"::"+ttl+"::initial_token";
+        Map<String, AttributeValue> DynamoMap = new HashMap();
+        DynamoMap.put("msg", new AttributeValue(msg));
+        req.setKey(DynamoMap);
+        logger.info("msg: "+msg);
         GetItemResult result = dynamoclient.getItem(req);
-        if (result.getItem() != null) {
-            String t[] = result.toString().split("::");
-            logger.info("t[0] "+t[0]);
-            logger.info("t[1] "+t[1]);
-            logger.info("t[2] "+t[2]);
+        logger.info("from DynamoDB "+result.toString());
+        logger.info("Item from DynamoDB "+result.getItem());
+        logger.info("msg from DynamoDB "+result.getItem().get("msg"));
+        logger.info("ttl from DynamoDB "+result.getItem().get("ttl"));
+        String t[] = result.toString().split("::");
+        logger.info("t[0] "+t[0]);
+        logger.info("t[1] "+t[1]);
+        logger.info("t[2] "+t[2]);
+      //  long dynamottl = Long.parseLong(result.getItem().get("ttl").toString());
+        long now = System.currentTimeMillis()/1000;
+        logger.info("now "+ now);
+        if ((result.getItem() != null) && (Long.parseLong(t[2]) > now)){
             if (t[1].equals(token)){
-            	logger.info("token from DB "+t[1]);
-                u1.setVerified(true);
-                u1.setVerified_on(LocalDateTime.now().toString());
+                logger.info("token from DB "+t[1]);
+                updateUserVerification(username);
                 return new ResponseEntity<Object>(HttpStatus.OK);
             }
             else {map.put("Message", "Invalid Link.");
+                logger.info("token mismatch");
                 return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);}
         }
         else {map.put("Message", "Invalid Link.");
+            logger.info("Not found in DynamoDB");
             return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);}
+    }
     }
     
     
