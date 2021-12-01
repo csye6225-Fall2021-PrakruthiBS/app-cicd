@@ -38,6 +38,11 @@ public class UpdateUserRequest {
 	//@JsonIgnore
 	//@CreationTimestamp
 	private LocalDateTime account_updated;
+	
+    private Boolean isVerified;
+
+	
+	private String verified_on;
 
 	public Long getId() {
 		return id;
@@ -85,6 +90,22 @@ public class UpdateUserRequest {
 
 	public void setAccount_updated(LocalDateTime account_updated) {
 		this.account_updated = account_updated;
+	}
+
+	public Boolean getIsVerified() {
+		return isVerified;
+	}
+
+	public void setIsVerified(Boolean isVerified) {
+		this.isVerified = isVerified;
+	}
+
+	public String getVerified_on() {
+		return verified_on;
+	}
+
+	public void setVerified_on(String verified_on) {
+		this.verified_on = verified_on;
 	}
 	
 	

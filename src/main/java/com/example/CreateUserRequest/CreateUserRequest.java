@@ -3,6 +3,7 @@ package com.example.CreateUserRequest;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
+import javax.persistence.Column;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -39,6 +40,12 @@ public class CreateUserRequest {
 	
 	
 	private LocalDateTime accountUpdated;
+	
+	
+	private Boolean isVerified;
+
+	
+	private String verified_on;
 
 
 	public String getFirst_name() {
@@ -98,6 +105,26 @@ public class CreateUserRequest {
 
 	public void setAccountUpdated(LocalDateTime accountUpdated) {
 		this.accountUpdated = accountUpdated;
+	}
+
+
+	public Boolean getIsVerified() {
+		return isVerified;
+	}
+
+
+	public void setIsVerified(Boolean isVerified) {
+		this.isVerified = isVerified;
+	}
+
+
+	public String getVerified_on() {
+		return verified_on;
+	}
+
+
+	public void setVerified_on(String verified_on) {
+		this.verified_on = verified_on;
 	}
 	
 	

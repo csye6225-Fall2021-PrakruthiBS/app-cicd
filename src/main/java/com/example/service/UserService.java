@@ -7,15 +7,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.naming.AuthenticationException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +45,21 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.GetItemResult;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClientBuilder;
+import com.amazonaws.services.sns.model.PublishResult;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.example.CreateUserRequest.CreateUserRequest;
 import com.example.CreateUserRequest.LoadUserRequest;
 import com.example.UpdateUserRequest.ResetPasswordRequest;
@@ -73,6 +89,9 @@ public class UserService implements UserDetailsService{
 	 private StatsDClient statsDClient;
 	
 	 private AmazonS3 s3client;
+	 private static AmazonSQS sqs;
+	 private static AmazonSNS sns;
+	 static String myQUrl = "";
 //	 @Value("${s3.endpointUrl}")
 //	 private String endpointUrl;
 	 @Value("${s3.bucketName}")
@@ -83,14 +102,29 @@ public class UserService implements UserDetailsService{
 //	 private String secretKey;
 	 @Value("${s3.region}")
 	 private String region;
+	 @Value("${sns.arn}")
+	 private String arn;
+	 @Value("${sqs.url}")
+	 private String sqsUrl;
 
 	 @PostConstruct
 	 private void initializeAmazon() {
 		  //AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
-		  //System.out.println("credentials: " + credentials);
 		  System.out.println("region: " + region);
-		  this.s3client = AmazonS3ClientBuilder.standard().withCredentials(new InstanceProfileCredentialsProvider(true)).build();
+		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
 		}
+	 
+	  
+	    private void initializeSQS() {
+	        this.sqs =  AmazonSQSClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
+	    }
+	    
+	    private void initializeSNS() {
+	        this.sns = AmazonSNSClientBuilder.standard()
+	        		.withRegion(region)
+	                .withCredentials(new InstanceProfileCredentialsProvider(false))
+	                .build();
+	    }
 	
 	 @Autowired
 	 public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
@@ -100,6 +134,7 @@ public class UserService implements UserDetailsService{
 	
 	public @ResponseBody UserEntity getUserInfo(String usernName, String password) {
 		UserEntity user = userRepository.findByUserName(usernName);
+		if(user.getVerified() == true) {
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
 		long startTime =  System.currentTimeMillis();
 		UserEntity usr = userRepository.findByUserName(usernName);
@@ -112,10 +147,16 @@ public class UserService implements UserDetailsService{
 			logger.error("User with given username does not exists/ username/password is wrong");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists/ username/password is wrong");
 		}
+		}
+		else {
+			logger.error("User is not verified");
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not verified");
+		}
 		
 	}
 		
 	public UserEntity createUser (CreateUserRequest createUserRequest) {
+		Session session = ((Session) userRepository).getSessionFactory().openSession();
 		UserEntity usr = new UserEntity(createUserRequest);
 		UserEntity userExists = userRepository.findByUserName(usr.getUserName());
 		System.out.println("username: " + usr.getUserName() + " usrpassword: " + usr.getPassword());
@@ -124,6 +165,8 @@ public class UserService implements UserDetailsService{
 				logger.error("User with given username already exists");
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username already exists");}
 			else {
+			usr.setVerified(false);
+	        usr.setVerified_on(null);
 			usr.setPassword(bCryptPasswordEncoder.encode(usr.getPassword()));
 			long startTime = System.currentTimeMillis();
 			usr = userRepository.save(usr);
@@ -131,6 +174,18 @@ public class UserService implements UserDetailsService{
             long duration = (endTime - startTime);
             statsDClient.recordExecutionTime("dbQueryTimeCreateUser", duration);
             logger.info("New user created in DB successfully");
+            String verification_token = UUID.randomUUID().toString();
+            long ttl = (System.currentTimeMillis()/1000)+120;
+            String message = usr.getUserName()+":"+verification_token+":"+"initial_token";
+            publishSNSMessage(message);
+            AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().build();
+            Map<String, AttributeValue> DynamoDBMap = new HashMap();
+            DynamoDBMap.put("msg", new AttributeValue(message));
+            DynamoDBMap.put("ttl", new AttributeValue(String.valueOf(ttl)));
+            PutItemRequest request = new PutItemRequest();
+            request.setTableName("csye6225");
+            request.setItem(DynamoDBMap);
+            PutItemResult result1 = dynamoclient.putItem(request);
 			return usr;
 			}
 		
@@ -149,6 +204,7 @@ public class UserService implements UserDetailsService{
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists");
 		}
 		else 
+			if(user.getVerified() == true) {
 			if(username.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
 			user.setFirstName(updateUserRequest.getFirst_name());
 			user.setLastName(updateUserRequest.getLast_name());
@@ -168,6 +224,11 @@ public class UserService implements UserDetailsService{
 			logger.error("Incorrect username/password");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect username/password");
 		}
+			}
+			else {
+				logger.error("User is not verified");
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not verified");
+			}
 	}
 
 	@Override
@@ -181,6 +242,58 @@ public class UserService implements UserDetailsService{
 
 	}
 	
+	//////////////////Amazon SNS Lambda///////////////////////////////
+	
+    public void sendMessage(String email,String token, String msgtype, String ttl) {
+        initializeSQS();
+        String message = email+":"+token+":"+msgtype+":"+ttl;
+        for (final String queueUrl : sqs.listQueues().getQueueUrls()) {
+            if(queueUrl.equals(sqsUrl)) {
+            	myQUrl = queueUrl;
+            }
+        }
+        sqs.sendMessage(new SendMessageRequest(myQUrl,message));
+     }
+	
+    public void publishSNSMessage(String message) {
+        initializeSNS();
+
+        System.out.println("Publishing SNS message: " + message);
+
+        PublishResult result = this.sns.publish(arn, message);
+
+        System.out.println("SNS Message ID: " + result.getMessageId());
+    }
+    
+    public ResponseEntity<Object> verifyUser (String username, String token){
+        statsDClient.incrementCounter("v1.verifyUserEmail");
+        Map<String, Object> map = new HashMap<String, Object>();
+        UserEntity u1 = userRepository.findByUserName(username);
+        AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().build();
+        GetItemRequest req = new GetItemRequest();
+        req.setTableName("csye6225");
+        req.setProjectionExpression("msg");
+        req.setConsistentRead(true);
+        String msg = username+":"+token+":"+"initial_token";
+        Map<String, AttributeValue> DynamoDBMap = new HashMap();
+        DynamoDBMap.put("msg", new AttributeValue(msg));
+        req.setKey(DynamoDBMap);
+        GetItemResult result = dynamoclient.getItem(req);
+        if (result.getItem() != null) {
+            String t[] = result.toString().split(":");
+            if (t[1].equals(token)){
+                u1.setVerified(true);
+                u1.setVerified_on(LocalDateTime.now().toString());
+                return new ResponseEntity<Object>(HttpStatus.OK);
+            }
+            else {map.put("Message", "Invalid Link.");
+                return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);}
+        }
+        else {map.put("Message", "Invalid Link.");
+            return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);}
+    }
+    
+    
 	//////////////////IMAGE PART//////////////////////////////////////
 	
 	private File convertMultiPartToFile(MultipartFile file)throws IOException {
@@ -198,6 +311,7 @@ public class UserService implements UserDetailsService{
 
 	public @ResponseBody Image getUserImage(String usernName, String password) {
 		UserEntity user = userRepository.findByUserName(usernName);
+		if (user.getVerified() == true) {
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
 			long startTime =  System.currentTimeMillis();
 			Image image = imageRepository.getByUserId(user.getId());
@@ -210,6 +324,11 @@ public class UserService implements UserDetailsService{
 			logger.error("User with given username does not exists/ username/password is wrong");
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists/ username/password is wrong");
 		}
+		}
+		else {
+			logger.error("User is not verified");
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not verified");
+		}
 		
 	}
 
@@ -219,6 +338,7 @@ public class UserService implements UserDetailsService{
 	
 		public Image uploadFile(String usernName, String password, byte[] file_input) throws Exception {
 			UserEntity user = userRepository.findByUserName(usernName);
+			if (user.getVerified() == true) {
 			if (usernName.equalsIgnoreCase(user.getUserName())&& bCryptPasswordEncoder.matches(password, user.getPassword())) {
 				Image image = new Image();
 				String fileUrl = "";
@@ -270,6 +390,11 @@ public class UserService implements UserDetailsService{
 				logger.error("User with given username does not exists/ username/password is wrong");
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with given username does not exists/ username/password is wrong");
 			}
+			}
+			else {
+				logger.error("User is not verified");
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not verified");
+			}
 		}
 
 	
@@ -279,6 +404,7 @@ public class UserService implements UserDetailsService{
 	
 	public String deleteFileFromS3Bucket(String usernName, String password) {
 		UserEntity user = userRepository.findByUserName(usernName);
+		if (user.getVerified() == true) {
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
 		  Image imageExists = imageRepository.getByUserId(user.getId());
 		  String fileName = imageExists.getFileName();
@@ -297,6 +423,10 @@ public class UserService implements UserDetailsService{
 		}
 		}
 	
-	
+		else {
+			logger.error("User is not verified");
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not verified");
+		}
+	}
 
 }
