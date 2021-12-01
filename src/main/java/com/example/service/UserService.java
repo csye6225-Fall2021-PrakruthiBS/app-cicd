@@ -265,7 +265,7 @@ public class UserService implements UserDetailsService{
     }
     
     public ResponseEntity<Object> verifyUser (String username, String token){
-        statsDClient.incrementCounter("v1.verifyUserEmail");
+        //statsDClient.incrementCounter("v1.verifyUserEmail");
         Map<String, Object> map = new HashMap<String, Object>();
         UserEntity u1 = userRepository.findByUserName(username);
         AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().build();
@@ -273,14 +273,18 @@ public class UserService implements UserDetailsService{
         req.setTableName("csye6225");
         req.setProjectionExpression("msg");
         req.setConsistentRead(true);
-        String msg = username+":"+token+":"+"initial_token";
+        String msg = username+"::"+token+"::"+"initial_token";
         Map<String, AttributeValue> DynamoDBMap = new HashMap();
         DynamoDBMap.put("msg", new AttributeValue(msg));
         req.setKey(DynamoDBMap);
         GetItemResult result = dynamoclient.getItem(req);
         if (result.getItem() != null) {
-            String t[] = result.toString().split(":");
+            String t[] = result.toString().split("::");
+            logger.info("t[0] "+t[0]);
+            logger.info("t[1] "+t[1]);
+            logger.info("t[2] "+t[2]);
             if (t[1].equals(token)){
+            	logger.info("token from DB "+t[1]);
                 u1.setVerified(true);
                 u1.setVerified_on(LocalDateTime.now().toString());
                 return new ResponseEntity<Object>(HttpStatus.OK);

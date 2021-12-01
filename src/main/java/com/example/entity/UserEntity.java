@@ -57,8 +57,8 @@ public class UserEntity {
 	
 	private String[] userRoles;
 	
-	@Column(name = "isVerified")
-	private Boolean isVerified;
+	@Column(name = "verified")
+	private Boolean verified;
 
 	@Column(name = "verified_on")
 	private String verified_on;
@@ -72,7 +72,7 @@ public class UserEntity {
 		this.password = createUserRequest.getPassword();
 		this.account_created = createUserRequest.getAccountCreated();
 		this.account_updated = createUserRequest.getAccountUpdated();
-		this.isVerified = createUserRequest.getIsVerified();
+		this.verified = createUserRequest.getIsVerified();
 		this.verified_on = createUserRequest.getVerified_on();
 	}
 	
@@ -149,11 +149,11 @@ public class UserEntity {
 	}
 
 	public Boolean getVerified() {
-		return isVerified;
+		return verified;
 	}
 
 	public void setVerified(Boolean verified) {
-		this.isVerified = verified;
+		this.verified = verified;
 	}
 
 	public String getVerified_on() {
