@@ -33,6 +33,10 @@ public class UserResponse {
 	private LocalDateTime accountCreated;
 	@JsonProperty("account_updated")
 	private LocalDateTime accountUpdated; 
+	@JsonProperty("isVerified")
+	private Boolean isVerified;	
+	@JsonProperty("verified_on")
+	private String verified_on;
 	
 	public UserResponse(UserEntity user) {
 		System.out.println("UserResponseConstructor");
@@ -42,6 +46,8 @@ public class UserResponse {
 		this.userName = user.getUserName();
 		this.accountCreated = user.getAccount_created();
 		this.accountUpdated = user.getAccount_updated();
+		this.isVerified = user.getVerified();
+		this.verified_on = user.getVerified_on();
 	}
 
 	

@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,7 +50,7 @@ import com.example.entity.UserEntity;
 
 @RestController
 //@EnableWebMvc
-@RequestMapping("/v1/user/")
+@RequestMapping("/v1/")
 public class UserController {
 
 	@Autowired
@@ -57,7 +59,7 @@ public class UserController {
     private StatsDClient statsDClient;
 	private final static Logger logger = LoggerFactory.getLogger(UserController.class);
 
-	@GetMapping(value = "self", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "user/self", produces = MediaType.APPLICATION_JSON_VALUE)
 	public UserResponse authenticate(HttpServletRequest request) {
 		statsDClient.incrementCounter("endpoint.v1.user.self.api.get");
 		String authorization = request.getHeader("authorization");
@@ -76,7 +78,7 @@ public class UserController {
 
 	}
 
-	@PostMapping("createUser")
+	@PostMapping("user")
 	public UserResponse createUser(@RequestBody CreateUserRequest createUserRequest) {
 		statsDClient.incrementCounter("endpoint.v1.user.createUser.api.post");
 		long startTime =  System.currentTimeMillis();
@@ -89,7 +91,7 @@ public class UserController {
 
 	}
 
-	@PutMapping("self")
+	@PutMapping("user/self")
 	public UserResponse updateUser(@Valid @RequestBody UpdateUserRequest updateUserRequest,	HttpServletRequest httpRequest) {
 		statsDClient.incrementCounter("endpoint.v1.user.self.api.put");
 		String authorization = httpRequest.getHeader("authorization");
@@ -107,7 +109,7 @@ public class UserController {
 
 	///////////////// IMAGE PART/////////////////////////////////
 
-	@GetMapping(value = "self/pic", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "user/self/pic", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ImageResponse getUser(HttpServletRequest request) {
 		statsDClient.incrementCounter("endpoint.v1.user.self.pic.api.get");
 		String authorization = request.getHeader("authorization");
@@ -124,7 +126,7 @@ public class UserController {
 	}
 
 	@PostMapping
-	@RequestMapping(value = "self/pic", consumes = MediaType.IMAGE_JPEG_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "user/self/pic", consumes = MediaType.IMAGE_JPEG_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ImageResponse uploadFile(@RequestBody byte[] file, HttpServletRequest request) throws Exception {
 		statsDClient.incrementCounter("endpoint.v1.user.self.pic.api.post");
 		String authorization = request.getHeader("authorization");
@@ -140,7 +142,7 @@ public class UserController {
 		return new ImageResponse(image);
 	}
 
-	@DeleteMapping(value = "self/pic")
+	@DeleteMapping(value = "user/self/pic")
 	public String deleteFile(HttpServletRequest request) throws Exception {
 		statsDClient.incrementCounter("endpoint.v1.user.self.pic.api.delete");
 		String authorization = request.getHeader("authorization");
@@ -155,4 +157,11 @@ public class UserController {
         logger.info("Time taken to delete user image details: "+duration);
 		return result;
 	}
+	
+	
+	 @RequestMapping(value = "user/EmailVerification", method = RequestMethod.GET)
+	    public ResponseEntity<Object> verifyUser(@RequestParam("email") String username, @RequestParam("token") String token) {
+	        statsDClient.incrementCounter("v1.verifyUserEmail");
+	        return this.userService.verifyUser(username,token);
+	 }
 }

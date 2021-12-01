@@ -12,7 +12,5 @@ import com.example.entity.UserEntity;
 public interface UserRepository extends JpaRepository<UserEntity, Long>{
 	
 	UserEntity findByUserName(String username);
-	//List<UserEntity> findByUsername(String username);
-	//UserEntity findByUserPassword(String password);
 	
 }
