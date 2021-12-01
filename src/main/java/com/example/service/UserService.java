@@ -114,10 +114,10 @@ public class UserService implements UserDetailsService{
 		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
 		}
 	 
-	  
-	    private void initializeSQS() {
-	        this.sqs =  AmazonSQSClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
-	    }
+//	  
+//	    private void initializeSQS() {
+//	        this.sqs =  AmazonSQSClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
+//	    }
 	    
 	    private void initializeSNS() {
 	        this.sns = AmazonSNSClientBuilder.standard()
@@ -177,7 +177,7 @@ public class UserService implements UserDetailsService{
             long ttl = (System.currentTimeMillis()/1000)+120;
             String message = usr.getUserName()+":"+verification_token+":"+"initial_token";
             publishSNSMessage(message);
-            AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().build();
+            AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
             Map<String, AttributeValue> DynamoDBMap = new HashMap();
             DynamoDBMap.put("msg", new AttributeValue(message));
             DynamoDBMap.put("ttl", new AttributeValue(String.valueOf(ttl)));
