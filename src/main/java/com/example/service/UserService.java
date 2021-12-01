@@ -104,8 +104,8 @@ public class UserService implements UserDetailsService{
 	 private String region;
 	 @Value("${sns.arn}")
 	 private String arn;
-	 @Value("${sqs.url}")
-	 private String sqsUrl;
+//	 @Value("${sqs.url}")
+//	 private String sqsUrl;
 
 	 @PostConstruct
 	 private void initializeAmazon() {
@@ -244,16 +244,16 @@ public class UserService implements UserDetailsService{
 	
 	//////////////////Amazon SNS Lambda///////////////////////////////
 	
-    public void sendMessage(String email,String token, String msgtype, String ttl) {
-        initializeSQS();
-        String message = email+":"+token+":"+msgtype+":"+ttl;
-        for (final String queueUrl : sqs.listQueues().getQueueUrls()) {
-            if(queueUrl.equals(sqsUrl)) {
-            	myQUrl = queueUrl;
-            }
-        }
-        sqs.sendMessage(new SendMessageRequest(myQUrl,message));
-     }
+//    public void sendMessage(String email,String token, String msgtype, String ttl) {
+//        initializeSQS();
+//        String message = email+":"+token+":"+msgtype+":"+ttl;
+//        for (final String queueUrl : sqs.listQueues().getQueueUrls()) {
+//            if(queueUrl.equals(sqsUrl)) {
+//            	myQUrl = queueUrl;
+//            }
+//        }
+//        sqs.sendMessage(new SendMessageRequest(myQUrl,message));
+//     }
 	
     public void publishSNSMessage(String message) {
         initializeSNS();
