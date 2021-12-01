@@ -156,7 +156,6 @@ public class UserService implements UserDetailsService{
 	}
 		
 	public UserEntity createUser (CreateUserRequest createUserRequest) {
-		Session session = ((Session) userRepository).getSessionFactory().openSession();
 		UserEntity usr = new UserEntity(createUserRequest);
 		UserEntity userExists = userRepository.findByUserName(usr.getUserName());
 		System.out.println("username: " + usr.getUserName() + " usrpassword: " + usr.getPassword());
