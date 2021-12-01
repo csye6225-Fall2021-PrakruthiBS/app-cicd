@@ -320,7 +320,7 @@ public class UserService implements UserDetailsService{
             logger.info("Not found in DynamoDB");
             return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);}
     }
-    }
+    
     
     
 	//////////////////IMAGE PART//////////////////////////////////////
