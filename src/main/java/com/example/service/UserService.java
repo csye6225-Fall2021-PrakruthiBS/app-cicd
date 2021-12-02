@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -71,6 +72,7 @@ import com.timgroup.statsd.StatsDClient;
 import com.example.repository.ImageRepository;
 
 @Service
+@Profile("prod")
 public class UserService implements UserDetailsService{
 	
 	@Autowired
@@ -111,7 +113,7 @@ public class UserService implements UserDetailsService{
 	 private void initializeAmazon() {
 		  //AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
 		  System.out.println("region: " + region);
-		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
+		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(true)).build();
 		}
 	 
 //	  
