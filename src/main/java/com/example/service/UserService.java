@@ -72,7 +72,7 @@ import com.timgroup.statsd.StatsDClient;
 import com.example.repository.ImageRepository;
 
 @Service
-@Profile("prod")
+//@Profile("prod")
 public class UserService implements UserDetailsService{
 	
 	@Autowired
