@@ -162,6 +162,7 @@ public class UserController {
 	 @RequestMapping(value = "user/EmailVerification", method = RequestMethod.GET)
 	    public ResponseEntity<Object> verifyUser(@RequestParam("email") String username, @RequestParam("token") String token, @RequestParam("ttl") String ttl) {
 	        statsDClient.incrementCounter("v1.user.EmailVerification");
+	        System.out.println("Inside email verification controller mapping");
 	        return this.userService.verifyUser(username,token, ttl);
 	 }
 }

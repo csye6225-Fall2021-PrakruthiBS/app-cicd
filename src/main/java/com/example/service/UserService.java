@@ -280,7 +280,7 @@ public class UserService implements UserDetailsService{
     }
     
     public ResponseEntity<Object> verifyUser (String username, String token, String ttl){
-
+    	System.out.println("Inside verify usr service");
         logger.info("Username from link: "+username);
         logger.info("token from link: "+token);
         Map<String, Object> map = new HashMap<String, Object>();
@@ -306,17 +306,23 @@ public class UserService implements UserDetailsService{
       //  long dynamottl = Long.parseLong(result.getItem().get("ttl").toString());
         long now = System.currentTimeMillis()/1000;
         logger.info("now "+ now);
+        System.out.println("result.getItem(): " + result.getItem());
+        System.out.println("Long.parseLong(t[2]): " + Long.parseLong(t[2]));
+        System.out.println("now "+ now);
         if ((result.getItem() != null) && (Long.parseLong(t[2]) > now)){
             if (t[1].equals(token)){
+            	System.out.println("Inside if");
                 logger.info("token from DB "+t[1]);
                 updateUserVerification(username);
                 return new ResponseEntity<Object>(HttpStatus.OK);
             }
             else {map.put("Message", "Invalid Link.");
+            System.out.println("token mismatch");
                 logger.info("token mismatch");
                 return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);}
         }
         else {map.put("Message", "Invalid Link.");
+        System.out.println("Not found in DynamoDB");
             logger.info("Not found in DynamoDB");
             return new ResponseEntity<Object>(map, HttpStatus.BAD_REQUEST);}
     }
