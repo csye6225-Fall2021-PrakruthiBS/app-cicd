@@ -175,11 +175,12 @@ public class UserService implements UserDetailsService{
             logger.info("New user created in DB successfully");
             String verification_token = UUID.randomUUID().toString();
             long ttl = (System.currentTimeMillis()/1000)+120;
-            String message = usr.getUserName()+"::"+verification_token+"::"+"initial_token";
-            publishSNSMessage(message);
+            //String message = usr.getUserName()+"::"+verification_token+"::"+"initial_token";
+            String msg = usr.getUserName()+"::"+verification_token+"::"+ttl+"::initial_token";
+            publishSNSMessage(msg);
             AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().build();
             Map<String, AttributeValue> DynamoDBMap = new HashMap();
-            DynamoDBMap.put("msg", new AttributeValue(message));
+            DynamoDBMap.put("msg", new AttributeValue(msg));
             DynamoDBMap.put("ttl", new AttributeValue(String.valueOf(ttl)));
             PutItemRequest request = new PutItemRequest();
             request.setTableName("csye6225");
@@ -300,9 +301,9 @@ public class UserService implements UserDetailsService{
         //logger.info("msg from DynamoDB "+result.getItem().get("msg"));
         //logger.info("ttl from DynamoDB "+result.getItem().get("ttl"));
         String t[] = result.toString().split("::");
-        logger.info("t[0] "+t[0]);
-        logger.info("t[1] "+t[1]);
-        logger.info("t[2] "+t[2]);
+        //logger.info("t[0] "+t[0]);
+        //logger.info("t[1] "+t[1]);
+        //logger.info("t[2] "+t[2]);
       //  long dynamottl = Long.parseLong(result.getItem().get("ttl").toString());
         long now = System.currentTimeMillis()/1000;
         logger.info("now "+ now);
