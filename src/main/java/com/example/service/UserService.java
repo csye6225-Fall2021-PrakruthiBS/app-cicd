@@ -175,7 +175,7 @@ public class UserService implements UserDetailsService{
             logger.info("New user created in DB successfully");
             String verification_token = UUID.randomUUID().toString();
             long ttl = (System.currentTimeMillis()/1000)+120;
-            String message = usr.getUserName()+":"+verification_token+":"+"initial_token";
+            String message = usr.getUserName()+"::"+verification_token+"::"+"initial_token";
             publishSNSMessage(message);
             AmazonDynamoDB dynamoclient = AmazonDynamoDBClientBuilder.standard().build();
             Map<String, AttributeValue> DynamoDBMap = new HashMap();
