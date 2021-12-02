@@ -297,8 +297,8 @@ public class UserService implements UserDetailsService{
         GetItemResult result = dynamoclient.getItem(req);
         logger.info("from DynamoDB "+result.toString());
         logger.info("Item from DynamoDB "+result.getItem());
-        logger.info("msg from DynamoDB "+result.getItem().get("msg"));
-        logger.info("ttl from DynamoDB "+result.getItem().get("ttl"));
+        //logger.info("msg from DynamoDB "+result.getItem().get("msg"));
+        //logger.info("ttl from DynamoDB "+result.getItem().get("ttl"));
         String t[] = result.toString().split("::");
         logger.info("t[0] "+t[0]);
         logger.info("t[1] "+t[1]);
