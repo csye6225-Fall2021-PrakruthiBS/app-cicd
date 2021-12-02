@@ -308,7 +308,7 @@ public class UserService implements UserDetailsService{
         long now = System.currentTimeMillis()/1000;
         logger.info("now "+ now);
         System.out.println("result.getItem(): " + result.getItem());
-        System.out.println("Long.parseLong(t[2]): " + Long.parseLong(t[2]));
+        //System.out.println("Long.parseLong(t[2]): " + Long.parseLong(t[2]));
         System.out.println("now "+ now);
         if ((result.getItem() != null) && (Long.parseLong(t[2]) > now)){
             if (t[1].equals(token)){
