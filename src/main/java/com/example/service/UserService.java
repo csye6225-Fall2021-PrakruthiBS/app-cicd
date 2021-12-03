@@ -61,6 +61,7 @@ import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.example.Configuration.MultiTenantManager;
 import com.example.CreateUserRequest.CreateUserRequest;
 import com.example.CreateUserRequest.LoadUserRequest;
 import com.example.UpdateUserRequest.ResetPasswordRequest;
@@ -89,6 +90,9 @@ public class UserService implements UserDetailsService{
 	 
 	 @Autowired
 	 private StatsDClient statsDClient;
+	 
+	 @Autowired
+	 MultiTenantManager multiTenantManager;
 	
 	 private AmazonS3 s3client;
 	 private static AmazonSQS sqs;
@@ -113,7 +117,7 @@ public class UserService implements UserDetailsService{
 	 private void initializeAmazon() {
 		  //AWSCredentials credentials = new BasicAWSCredentials(this.accessKeyId, this.secretKey);
 		  System.out.println("region: " + region);
-		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(true)).build();
+		  this.s3client = AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new InstanceProfileCredentialsProvider(false)).build();
 		}
 	 
 //	  
@@ -135,6 +139,7 @@ public class UserService implements UserDetailsService{
 	    }
 	
 	public @ResponseBody UserEntity getUserInfo(String usernName, String password) {
+		multiTenantManager.setCurrentTenant("getUser");
 		UserEntity user = userRepository.findByUserName(usernName);
 		if(user.getVerified() == true) {
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
@@ -158,6 +163,7 @@ public class UserService implements UserDetailsService{
 	}
 		
 	public UserEntity createUser (CreateUserRequest createUserRequest) {
+		multiTenantManager.setCurrentTenant("postUser");
 		UserEntity usr = new UserEntity(createUserRequest);
 		UserEntity userExists = userRepository.findByUserName(usr.getUserName());
 		System.out.println("username: " + usr.getUserName() + " usrpassword: " + usr.getPassword());
@@ -199,7 +205,7 @@ public class UserService implements UserDetailsService{
 	 
 	 
 	public UserEntity updateUser(UpdateUserRequest updateUserRequest, String username, String password) {
-
+		multiTenantManager.setCurrentTenant("putUser");
 			UserEntity user = userRepository.findByUserName(username);
 		if(userRepository.findByUserName(username) == null) {
 			logger.error("User with given username does not exists");
@@ -234,7 +240,7 @@ public class UserService implements UserDetailsService{
 	}
 	
 	public UserEntity updateUserVerification(String username) {
-
+		multiTenantManager.setCurrentTenant("updateUserVerification");
 		UserEntity user = userRepository.findByUserName(username);
 
 		user.setVerified(true);
@@ -283,6 +289,7 @@ public class UserService implements UserDetailsService{
     }
     
     public ResponseEntity<Object> verifyUser (String username, String token, String ttl){
+    	multiTenantManager.setCurrentTenant("verifyUser");
     	System.out.println("Inside verify usr service");
         logger.info("Username from link: "+username);
         logger.info("token from link: "+token);
@@ -348,6 +355,7 @@ public class UserService implements UserDetailsService{
 	
 
 	public @ResponseBody Image getUserImage(String usernName, String password) {
+		multiTenantManager.setCurrentTenant("getUserImage");
 		UserEntity user = userRepository.findByUserName(usernName);
 		if (user.getVerified() == true) {
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
@@ -375,6 +383,7 @@ public class UserService implements UserDetailsService{
 		}
 	
 		public Image uploadFile(String usernName, String password, byte[] file_input) throws Exception {
+			multiTenantManager.setCurrentTenant("postUserImage");
 			UserEntity user = userRepository.findByUserName(usernName);
 			if (user.getVerified() == true) {
 			if (usernName.equalsIgnoreCase(user.getUserName())&& bCryptPasswordEncoder.matches(password, user.getPassword())) {
@@ -441,6 +450,7 @@ public class UserService implements UserDetailsService{
     }
 	
 	public String deleteFileFromS3Bucket(String usernName, String password) {
+		multiTenantManager.setCurrentTenant("deleteUserImage");
 		UserEntity user = userRepository.findByUserName(usernName);
 		if (user.getVerified() == true) {
 		if(usernName.equalsIgnoreCase(user.getUserName()) && bCryptPasswordEncoder.matches(password, user.getPassword())) {
