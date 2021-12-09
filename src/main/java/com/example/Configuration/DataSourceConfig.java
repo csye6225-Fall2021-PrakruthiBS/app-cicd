@@ -78,7 +78,7 @@ public class DataSourceConfig {
 	final DriverManagerDataSource defaultDataSource = new DriverManagerDataSource();
 	Properties properties = new Properties();
     properties.setProperty("sslMode", "VERIFY_IDENTITY");
-	String connection_url = main_url ;//+ "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+	String connection_url = main_url + "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 		defaultDataSource.setDriverClassName("com.mysql.jdbc.Driver");
 		defaultDataSource.setUrl(connection_url);
 		defaultDataSource.setUsername(username);
