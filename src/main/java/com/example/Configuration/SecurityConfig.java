@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import com.example.entity.Image;
 import com.example.entity.UserEntity;
 
-@Component
+//@Component
 public class SecurityConfig {
 
 	@Value("${spring1.datasource.url}")
