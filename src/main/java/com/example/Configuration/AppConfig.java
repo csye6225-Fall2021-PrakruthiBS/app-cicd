@@ -18,45 +18,47 @@ import com.example.service.UserService;
 
 //@Configuration
 //@EnableWebSecurity
-public class ApplicationConfiguration extends WebSecurityConfigurerAdapter {
+public class AppConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private UserBasicAuthenticationEntryPoint authenticationEntryPoint;
    
     @Autowired
     UserService userService;
     
-    @Autowired
-    private CustomAuthenticationProvider authProvider;
+//    @Autowired
+//    private CustomAuthenticationProvider authProvider;
 
-    @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+//    @Bean
+//    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
     
-    @Autowired
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userService).passwordEncoder(bCryptPasswordEncoder());
-        auth.authenticationProvider(authProvider);
-    }
+//    @Autowired
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(userService).passwordEncoder(bCryptPasswordEncoder());
+//        auth.authenticationProvider(authProvider);
+//    }
     
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers("/").permitAll()
-        		.antMatchers("/getUserInfo").permitAll()
+        		.antMatchers("/user").permitAll()
+        		.antMatchers("/user/self").permitAll()
+        		.antMatchers("/user/self/pic").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic()
                 .and()
-                .csrf().disable()
-                .authenticationProvider(authProvider);
+                .csrf().disable();
+                //.authenticationProvider(authProvider);
     }
 
     @Override
     public void configure(WebSecurity web) throws Exception {
         web
                 .ignoring()
-                .antMatchers("/createUser","/updateUser");
+                .antMatchers("/user","/user/self","/user/self/pic");
     }
 }
